@@ -1,0 +1,88 @@
+# xgboost
+
+label_df = pd.DataFrame(index = train_df_munged.index, columns=["SalePrice"])
+label_df["SalePrice"] = np.log(train_df["SalePrice"])
+
+import xgboost as xgb
+from xgboost import plot_importance
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+xgb_regr = xgb.XGBRegressor(
+                 colsample_bytree=0.2,
+                 gamma=0.0,
+                 learning_rate=0.01,
+                 max_depth=4,
+                 min_child_weight=1.5,
+                 n_estimators=7200,                                                                  
+                 reg_alpha=0.9,
+                 reg_lambda=0.6,
+                 subsample=0.2,
+                 seed=42,
+                 silent=1)
+
+xgb_regr.fit(train_df_munged, label_df)
+# feature importance
+plot_importance(xgb_regr)
+plt.show()
+
+import operator
+importance = xgb_regr.booster().get_score(importance_type='weight')
+importance = sorted(importance.items(), key=operator.itemgetter(1))
+df = pd.DataFrame(importance, columns=['feature', 'fscore'])
+df['fscore'] = df['fscore'] / df['fscore'].sum()
+plt.figure()
+df.plot()
+df.plot(kind='barh', x='feature', y='fscore', legend=False, figsize=(6, 10))
+plt.title('XGBoost Feature Importance')
+plt.xlabel('relative importance')
+
+from sklearn.cross_validation import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(train_df_munged, label_df, test_size=0.2, random_state=42)
+
+thresholds = sorted(list(set(df.fscore)))
+
+import sklearn.grid_search as gs
+res = pd.DataFrame(columns=['i', 'Thresh', 'n', 'RMSE'])
+for i,thresh in enumerate(thresholds[0:179]):
+    # select features using threshold
+    select_X_train = X_train[df[df['fscore']>=thresh]['feature']]
+    select_X_test = X_test[df[df['fscore']>=thresh]['feature']]
+    # train model
+    np.random.seed(108)
+    xgb_regr = xgb.XGBRegressor()
+    grid_para_tree = [{"colsample_bytree": [0.2], "gamma": [0.0], "learning_rate": [0.01], "max_depth": [4],
+                      "min_child_weight": [1.5], "n_estimators": [7200], "reg_alpha": [0.9], "reg_lambda": [0.6],
+                      "subsample": [0.2], "seed": [42], "silent": [1]}]
+    grid_search_tree = gs.GridSearchCV(xgb_regr, grid_para_tree, cv=5, scoring='mean_squared_error')
+    grid_search_tree.fit(select_X_train, y_train)
+    y_pred = grid_search_tree.predict(select_X_test)
+    res.append(pd.Series([i, thresh, select_X_train.shape[1], rmse(y_test, y_pred)]), ignore_index=True)
+    print('i=%d, Thresh=%.6f, n=%d, RMSE=%.10f' % (i, thresh, select_X_train.shape[1], rmse(y_test, y_pred)))
+
+res = pd.read_csv("xgboost_res.csv")
+res.iloc[res["RMSE"].idxmin()]
+res.plot(x='n', y='RMSE', legend=False, figsize=(12, 4))
+plt.title('XGBoost Feature Selection')
+plt.xlabel('feature numbers')
+plt.ylabel('RMSE')
+
+import sklearn.grid_search as gs
+i = 14
+thresh = thresholds[i]
+# select features using threshold
+select_X_train = X_train[df[df['fscore']>=thresh]['feature']]
+select_X_test = X_test[df[df['fscore']>=thresh]['feature']]
+test = test_df_munged[df[df['fscore']>=thresh]['feature']]
+# train model
+np.random.seed(108)
+xgb_regr = xgb.XGBRegressor()
+grid_para_tree = [{"colsample_bytree": [0.2], "gamma": [0.0], "learning_rate": [0.01], "max_depth": [4],
+                  "min_child_weight": [1.5], "n_estimators": [7200], "reg_alpha": [0.9], "reg_lambda": [0.6],
+                  "subsample": [0.2], "seed": [42], "silent": [1]}]
+grid_search_tree = gs.GridSearchCV(xgb_regr, grid_para_tree, cv=5, scoring='mean_squared_error')
+grid_search_tree.fit(select_X_train, y_train)
+y_pred = grid_search_tree.predict(select_X_test)
+print('i=%d, Thresh=%.6f, n=%d, RMSE=%.10f' % (i, thresh, select_X_train.shape[1], rmse(y_test, y_pred)))
+y_pred = grid_search_tree.predict(test)
+
