@@ -1,0 +1,16 @@
+import pandas as pd
+import numpy as np
+
+kg1 = pd.read_csv("xgboost_data.csv")
+kg2 = pd.read_csv("ridge_data.csv")
+kg3 = pd.read_csv("lasso_data.csv")
+
+
+kg_a = pd.merge(kg1,kg2, how = 'left', on = 'Id')
+kg = pd.merge(kg_a,kg3, how = 'left', on = 'Id')
+
+kg.to_csv('kg_data.csv', header=True,index_label='Id1')
+
+y_pred = (0.1*np.ravel(kgg.SalePrice) + 0.5*np.ravel(kgg.SalePrice_r)+0.4*np.ravel(kgg.SalePrice_l))
+
+y_predprice = pd.DataFrame(y_pred, index=kg2["Id"], columns=["SalePrice"])
