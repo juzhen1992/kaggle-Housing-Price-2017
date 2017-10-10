@@ -1,0 +1,241 @@
+# Kernel Ridge GridSearch
+
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.cross_validation import StratifiedKFold
+from sklearn.grid_search import GridSearchCV
+from sklearn.linear_model import Ridge
+
+kridge_grid = KernelRidge()
+
+parameter_grid = {'alpha': [0.0001,0.001,0.01,0.1],
+                 'degree': [1,2,3,4],
+                 'kernel': ['polynomial']
+                 }
+
+cross_validation = StratifiedKFold(np.array(label_df['SalePrice']), n_folds=10)
+
+grid_search_kridge = GridSearchCV(kridge_grid,
+                           param_grid = parameter_grid,
+                           scoring = 'mean_squared_error',
+                           cv = cross_validation)
+
+grid_search_kridge.fit(train_df_munged, label_df)
+
+print grid_search_kridge
+print (grid_search_kridge.best_score_)
+print (grid_search_kridge.best_estimator_.alpha)
+
+print('Best score (Kernel Ridge): {}'.format(grid_search_kridge.best_score_))
+print('Best parameters: {}'.format(grid_search_kridge.best_params_))
+
+y_train_pred_kridge = grid_search_kridge.best_estimator_.predict(train_df_munged)
+print("Kernel Ridge score on training set: ", rmse(label_df,y_train_pred_kridge))
+#fit the data no.1
+ridge1 = KernelRidge(alpha = 0.1, degree = 1, kernel = 'polynomial')
+ridge1.fit(train_df_munged, label_df)
+y_train_pred_ridge1 = ridge1.predict(train_df_munged)
+print (rmse(label_df, y_train_pred_ridge1))
+
+#fit the data no.2
+ridge2 = KernelRidge(alpha = 0.1, degree = 2, kernel = 'polynomial')
+ridge2.fit(train_df_munged, label_df)
+y_train_pred_ridge2 = ridge2.predict(train_df_munged)
+print (rmse(label_df, y_train_pred_ridge2))
+
+#fit the data no.3
+ridge3 = KernelRidge(alpha = 0.1, degree = 3, kernel = 'polynomial')
+ridge3.fit(train_df_munged, label_df)
+y_train_pred_ridge3 = ridge3.predict(train_df_munged)
+print (rmse(label_df, y_train_pred_ridge3))
+
+#fit the data no.4
+ridge4 = KernelRidge(alpha = 0.1, degree = 4, kernel = 'polynomial')
+ridge4.fit(train_df_munged, label_df)
+y_train_pred_ridge4 = ridge4.predict(train_df_munged)
+print (rmse(label_df, y_train_pred_ridge4))
+
+#fit the data no.5
+ridge5 = KernelRidge(alpha = 0.1, degree = 2, kernel = 'polynomial')
+ridge5.fit(train_df_munged, label_df)
+y_train_pred_ridge5 = ridge5.predict(train_df_munged)
+print (rmse(label_df, y_train_pred_ridge5))
+
+#fit the data no.6
+ridge6 = KernelRidge(alpha = 0.2, degree = 2, kernel = 'polynomial')
+ridge6.fit(train_df_munged, label_df)
+y_train_pred_ridge6 = ridge6.predict(train_df_munged)
+print (rmse(label_df, y_train_pred_ridge6))
+
+#fit the data no.7
+ridge7 = KernelRidge(alpha = 0.3, degree = 2, kernel = 'polynomial')
+ridge7.fit(train_df_munged, label_df)
+y_train_pred_ridge7 = ridge7.predict(train_df_munged)
+print (rmse(label_df, y_train_pred_ridge7))
+
+#fit the data no.8
+ridge8 = KernelRidge(alpha = 0.4, degree = 2, kernel = 'polynomial')
+ridge8.fit(train_df_munged, label_df)
+y_train_pred_ridge8 = ridge8.predict(train_df_munged)
+print (rmse(label_df, y_train_pred_ridge8))
+
+#kernel ridge regression and save the coefficients in r
+Krr = KernelRidge(alpha=0.1, kernel='polynomial', coef0=0, degree = 2)
+Krr.fit(train_df_munged, label_df)
+r = np.dot(train_df_munged.transpose(),Krr.dual_coef_)
+
+
+# generate the dataframe of coefficients
+kridge_df = pd.DataFrame(r).transpose()
+kridge_df.columns = train_df_munged.columns
+kridge_dff = kridge_df.transpose()
+kridge_dff.columns = ['coefficient']
+kridge_dff
+
+# plot bar chart for the lasso model where coefficient not equal to 0
+# we derive the dataframe and sort the value of coefficients first
+kridge_dfff = kridge_dff[kridge_dff['coefficient']!=0]
+kridge_dfff_sort = kridge_dfff.sort_values(by = 'coefficient', ascending = False)
+kridge_dfff_sortt = kridge_dfff_sort.transpose()
+kridge_dfff_sort.to_csv('ridge_sortdata.csv', header=True,index_label='feature')
+
+#draw the bar chart
+ridgeplt = pd.Series(kridge_dfff_sort.coefficient, index = kridge_dfff_sortt.columns)
+ridgeplt.plot(kind = 'bar', fontsize = 3)
+
+import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize'] = 25,7
+plt.show()
+
+#derive the coefficient of ridge model
+r = Ridge(alpha=0.1,fit_intercept=False)
+r.fit(train_df_munged, label_df)
+r.coef_
+
+kridge_df = pd.DataFrame(r.coef_).transpose()
+kridge_dff = kridge_df.transpose()
+kridge_dff.columns = train_df_munged.columns
+kridge_dff = kridge_dff.transpose()
+kridge_dff.columns = ['coefficient']
+kridge_dff
+
+# plot bar chart for the lasso model where coefficient not equal to 0
+# we derive the dataframe and sort the value of coefficients first
+kridge_dfff = kridge_dff[kridge_dff['coefficient']!=0]
+kridge_dfff_sort = kridge_dfff.sort_values(by = 'coefficient', ascending = False)
+kridge_dfff_sortt = kridge_dfff_sort.transpose()
+kridge_dfff_sort.to_csv('ridge_sortdata.csv', header=True,index_label='feature')
+
+#draw the bar chart
+ridgeplt = pd.Series(kridge_dfff_sort.coefficient, index = kridge_dfff_sortt.columns)
+ridgeplt.plot(kind = 'bar', fontsize = 10)
+
+import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize'] = 25,10
+plt.show()
+
+# scatterplot between different ridge prediction data and saleprice
+
+import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize']=20,10
+
+line = plt.figure()
+x1 = y_train_pred_ridge1
+x2 = y_train_pred_ridge2
+x3 = y_train_pred_ridge3
+x4 = y_train_pred_ridge4
+x5 = y_train_pred_ridge5
+x6 = y_train_pred_ridge6
+x7 = y_train_pred_ridge7
+x8 = y_train_pred_ridge8
+y = label_df
+
+plt.subplot(241)
+plt.plot(x1, y, "o")
+plt.title('alpha=0.1,degree=1', fontsize = 12)
+plt.subplot(242)
+plt.plot(x2, y, "o")
+plt.title('alpha=0.1,degree=2', fontsize = 12)
+plt.subplot(243)
+plt.plot(x3, y, "o")
+plt.title('alpha=0.1,degree=3', fontsize = 12)
+plt.subplot(244)
+plt.plot(x4, y, "o")
+plt.title('alpha=0.1,degree=4', fontsize = 12)
+plt.subplot(245)
+plt.plot(x5, y, "o")
+plt.title('alpha=0.1,degree=2', fontsize = 12)
+plt.subplot(246)
+plt.plot(x6, y, "o")
+plt.title('alpha=0.2,degree=2', fontsize = 12)
+plt.subplot(247)
+plt.plot(x7, y, "o")
+plt.title('alpha=0.3,degree=2', fontsize = 12)
+plt.subplot(248)
+plt.plot(x8, y, "o")
+plt.title('alpha=0.4,degree=2', fontsize = 12)
+plt.show()
+
+#derive the prediction
+y_test_pred_ridge = grid_search_kridge.predict(test_df_munged)
+y_test_pred_ridge = np.exp(y_test_pred_ridge)
+
+#Lasso Model
+
+from sklearn.grid_search import GridSearchCV
+from sklearn.linear_model import Lasso
+
+alphas = np.array([1, 0.99, 0.099, 0.0099, 0.00099, 0])
+klasso_grid = Lasso()
+grid_search_klasso = GridSearchCV(estimator = klasso_grid,
+                           param_grid = dict(alpha = alphas),
+                           cv = 5)
+grid_search_klasso.fit(train_df_munged, label_df)
+
+print grid_search_klasso
+print (grid_search_klasso.best_score_)
+print (grid_search_klasso.best_estimator_.alpha)
+
+print('Best score (Lasso): {}'.format(grid_search_klasso.best_score_))
+print('Best parameters: {}'.format(grid_search_klasso.best_params_))
+
+y_train_pred_klasso = grid_search_klasso.best_estimator_.predict(train_df_munged)
+print("Lasso score on training set: ", rmse(label_df,y_train_pred_klasso))
+
+best_alpha = grid_search_klasso.best_estimator_.alpha
+regr = Lasso(alpha=best_alpha, max_iter=50000)
+regr.fit(train_df_munged, label_df)
+regr_df = pd.DataFrame(regr.coef_).transpose()
+
+regr_df.columns = train_df_munged.columns
+regr_dff = regr_df.transpose()
+regr_dff.columns = ['coefficient']
+regr_dff
+
+# Run prediction on training set to get a rough idea of how well it does.
+y_pred = regr.predict(train_df_munged)
+y_test = label_df
+print("Lasso score on training set: ", rmse(y_test, y_pred))
+
+
+# plot bar chart for the lasso model where feature coefficient not equal to 0
+# we derive the dataframe and sort the value of coefficients first
+regr_dfff = regr_dff[regr_dff['coefficient']!=0]
+regr_dfff_sort = regr_dfff.sort_values(by = 'coefficient', ascending = False)
+aa = regr_dfff_sort.transpose()
+regr_dfff_sort.to_csv('lasso_sortdata.csv', header=True,index_label='feature')
+
+
+#draw the bar chart
+lassoplt = pd.Series(regr_dfff_sort.coefficient, index = aa.columns)
+lassoplt.plot(kind = 'bar', fontsize = 10)
+
+import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize'] = 25,10
+plt.show()
+
+# Run prediction on the Kaggle test set.
+y_test_pred_lasso = regr.predict(test_df_munged)
+y_test_pred_lasso = np.exp(y_test_pred_lasso)
+
+
+
