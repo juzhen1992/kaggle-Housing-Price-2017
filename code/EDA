@@ -1,0 +1,44 @@
+import pandas as pd
+train_df = pd.read_csv("train.csv")
+# why to filter living area>4000
+import matplotlib.pyplot as plt
+import numpy as np
+%matplotlib inline
+x = train_df.GrLivArea
+plt.hist(x, normed=True, bins=20)
+plt.xlim(0, 6000)
+plt.ylabel('Probability')
+# how saleprice varies across neighborhood
+import seaborn as sns
+import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize']=(20,10)
+sns.boxplot(x="Neighborhood", y="SalePrice", data=train_df)
+# why to treat some categorical features to different levels
+import seaborn as sns
+import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize']=(12,10)
+sns.boxplot(x="ExterQual", y="SalePrice", data=train_df)
+import seaborn as sns
+import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize']=(12,10)
+sns.boxplot(x="BsmtExposure", y="SalePrice", data=train_df)
+# why add new features between regular and irregular.
+df_IsRegularLotShape=train_df.groupby(["LotShape"]).size().reset_index(name='counts')
+df_IsRegularLotShape.plot('LotShape', 'counts', kind='bar', color='r')
+plt.show()
+# why to separate months to different levels (april to july is high season)
+x = train_df.MoSold
+plt.hist(x, normed=True, bins=20)
+plt.ylabel('Probability')
+# why to Simplifications of existing features into bad/average/good.
+x = train_df.OverallQual
+plt.hist(x, normed=True, bins=20)
+plt.ylabel('Probability')
+# high correlated numeric features: correlation matrix plot
+import seaborn as sns
+df=train_df[['TotRmsAbvGrd', 'Fireplaces', 'GarageYrBlt', 'GarageArea','TotalBsmtSF', 
+             'GrLivArea','OverallQual', 'YearBuilt', 'LotFrontage']]
+f, ax = plt.subplots(figsize=(10, 8))
+corr = df.corr()
+sns.heatmap(corr, mask=np.zeros_like(corr, dtype=np.bool), cmap=sns.diverging_palette(220, 10, as_cmap=True),
+            square=True, ax=ax)
